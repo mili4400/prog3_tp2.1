@@ -1,4 +1,22 @@
-class Sensor {}
+class Sensor {
+    constructor(id, name, type, value, unit, updated_at) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.value = value;
+        this.unit = unit;
+        this.updated_at = updated_at;
+    }
+
+    set updateValue(newValue) {
+        this.value = newValue;
+        this.updated_at = new Date().toISOString();
+    }
+
+    static get allowedTypes() {
+        return ['temperatura', 'humidity', 'pressure'];
+    }
+}
 
 class SensorManager {
     constructor() {
@@ -33,7 +51,26 @@ class SensorManager {
         }
     }
 
-    async loadSensors(url) {}
+    async loadSensors(url) {
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            sensorData.forEach(sensorInfo => {
+                const sensor = new Sensor(
+                    sensorInfo.id,
+                    sensorInfo.name,
+                    sensorInfo.type,
+                    sensorInfo.value,
+                    sensorInfo.unit,
+                    sensorInfo.updated_at
+                );
+                this.sensors.push(sensor);
+            });
+            this.render();
+        } catch (error) {
+            console.error('Error al cargar sensores:', error);
+        }
+    }
 
     render() {
         const container = document.getElementById("sensor-container");
