@@ -6,11 +6,51 @@ class Currency {
 }
 
 class CurrencyConverter {
-    constructor() {}
+    constructor(apiUrl) {
+        this.apiUrl = apiUrl;
+        this.currencies = [];
+    }
 
-    getCurrencies(apiUrl) {}
+    async getCurrencies() {
+        try {
+            const response = await fetch(`${this.apiUrl}/currencies`);
+            const data = await response.json();
+            this.currencies = Object.keys(data).map(code => ({ code }));
+        } catch (error) {
+            console.error('Error al buscar monmedas:', error);
+        }
+    }
 
-    convertCurrency(amount, fromCurrency, toCurrency) {}
+    async convertCurrency(amount, fromCurrency, toCurrency) {
+        if (fromCurrency.code === toCurrency.code) {
+            return amount;
+        }
+        try {
+            const response = await fetch(`${this.apiUrl}/latest?from=${fromCurrency.code}&to=${toCurrency.code}`);
+            const data = await response.json();
+            const exchangeRate = data.rates[toCurrency.code];
+            if (exchangeRate) {
+                return amount * exchangeRate;
+            } else {
+                console.error('Codigos de monedas no validos.');
+                return null;
+            }
+        }catch (error) {
+            console.error('Error al convertir la moneda:', error);
+            return null;
+        }
+    }
+    async calculateRateDifference(date1, date2, baseCurrency, targetCurrency) {
+        const rate1 = await getExchangeRate(date1, baseCurrency, targetCurrency);
+        const rate2 = await getExchangeRate(date2, baseCurrency, targetCurrency);
+    
+        if (rate1 !== null && rate2 !== null) {
+            const difference = rate2 - rate1;
+            console.log(`Diferencia entre ${baseCurrency} y ${targetCurrency} el ${date1} y el ${date2}: ${difference}`);
+        } else {
+            console.log('No se pudieron obtener tasas de cambio para las fechas especificadas.');
+        }
+    }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
